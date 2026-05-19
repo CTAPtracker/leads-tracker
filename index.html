@@ -1,0 +1,1362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Leads">
+<title>Leads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-2: #1c1c1c;
+  --surface-3: #242424;
+  --border: #2a2a2a;
+  --text: #ededed;
+  --text-dim: #8a8a8a;
+  --text-faint: #555;
+  --accent: #f59e0b;
+  --accent-soft: rgba(245, 158, 11, 0.12);
+  --accent-dim: #b45309;
+  --green: #10b981;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --sans: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.4; overscroll-behavior-y: none; }
+body { padding-bottom: 92px; padding-top: env(safe-area-inset-top); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+.num, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+button { font-family: inherit; color: inherit; background: none; border: none; cursor: pointer; font-size: inherit; }
+input, textarea, select { font-family: inherit; color: var(--text); font-size: 15px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; width: 100%; }
+textarea { resize: vertical; min-height: 64px; }
+input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+::placeholder { color: var(--text-faint); }
+
+/* Header */
+.header { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.brand { font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+.brand .dot { color: var(--accent); }
+.date { font-family: var(--mono); font-size: 10px; color: var(--text-faint); letter-spacing: 0.04em; text-align: right; }
+.streak-badge { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 700; }
+
+/* Quickstats */
+.quickstats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); background: var(--surface); }
+.qs { padding: 12px 4px; text-align: center; border-right: 1px solid var(--border); }
+.qs:last-child { border-right: none; }
+.qs-label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 4px; font-weight: 700; }
+.qs-val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 700; line-height: 1; }
+.qs-val.accent { color: var(--accent); }
+.qs-val .sub { font-size: 13px; color: var(--text-faint); margin-left: 2px; }
+
+/* Views */
+.view { padding: 18px; }
+.view.hidden { display: none; }
+
+/* Sections / form */
+.section { margin-bottom: 18px; }
+.section.collapsed { display: none; }
+.section-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
+.section-label .req { color: var(--accent); margin-left: 4px; }
+.section-label .hint { color: var(--text-faint); text-transform: none; letter-spacing: 0.04em; font-weight: 500; font-size: 10px; }
+
+.chips { display: grid; gap: 8px; grid-template-columns: repeat(2, 1fr); }
+.chips.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.chips.cols-5 { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.chips.binary { grid-template-columns: 1fr 1fr; }
+.chip { min-height: 50px; padding: 10px 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font-weight: 500; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: transform 0.08s, background 0.1s, border-color 0.1s; text-align: center; line-height: 1.15; }
+.chip.compact { min-height: 46px; font-size: 13px; }
+.chip.scale { min-height: 52px; font-family: var(--mono); font-size: 14px; font-weight: 600; flex-direction: column; gap: 2px; }
+.chip.scale .scale-num { font-size: 16px; font-weight: 700; }
+.chip.scale .scale-lbl { font-size: 9px; color: var(--text-faint); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; line-height: 1; }
+.chip:active { transform: scale(0.97); }
+.chip.selected { background: var(--accent); color: #1a1300; border-color: var(--accent); font-weight: 700; }
+.chip.selected.scale .scale-lbl { color: rgba(26,19,0,0.6); }
+.chip.selected.success { background: var(--green); color: #052e1f; border-color: var(--green); }
+.chip.selected.danger { background: var(--red); color: #fff; border-color: var(--red); }
+.chip.selected.info { background: var(--blue); color: #fff; border-color: var(--blue); }
+.chip.selected.muted { background: var(--surface-3); color: var(--text); border-color: var(--text-dim); }
+
+details.disclosure { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+details.disclosure summary { cursor: pointer; font-size: 12px; color: var(--text-dim); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.disclosure summary::-webkit-details-marker { display: none; }
+details.disclosure summary::after { content: '+'; font-family: var(--mono); font-size: 16px; color: var(--accent); }
+details.disclosure[open] summary::after { content: '−'; }
+details.disclosure[open] summary { margin-bottom: 14px; }
+.field { margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 10px; color: var(--text-faint); margin-bottom: 6px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+
+.save-row { display: flex; gap: 8px; margin-top: 6px; }
+.save-btn { flex: 1; padding: 18px; background: var(--accent); color: #1a1300; border-radius: 10px; font-weight: 700; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; transition: background 0.1s; }
+.save-btn:disabled { background: var(--surface-2); color: var(--text-faint); }
+.save-btn:active:not(:disabled) { background: var(--accent-dim); }
+
+.edit-banner { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.edit-banner button { color: var(--text-dim); font-size: 11px; text-decoration: underline; }
+
+/* Rehearsal nudge */
+.nudge { background: linear-gradient(135deg, rgba(245,158,11,0.10), rgba(245,158,11,0.02)); border: 1px solid var(--accent); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; position: relative; }
+.nudge-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.nudge-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.nudge-dismiss { color: var(--text-faint); font-size: 18px; line-height: 1; padding: 4px; }
+.nudge-phrase { font-style: italic; color: var(--text); font-size: 15px; line-height: 1.45; margin-bottom: 8px; }
+.nudge-meta { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.04em; }
+.nudge-meta .good { color: var(--green); }
+
+/* Stats */
+.stats-tabs { display: flex; gap: 3px; background: var(--surface-2); padding: 4px; border-radius: 10px; margin-bottom: 18px; }
+.stats-tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); border-radius: 7px; }
+.stats-tab.active { background: var(--surface); color: var(--accent); }
+
+.headline { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 16px; margin-bottom: 14px; text-align: center; }
+.headline-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; font-weight: 700; }
+.headline-value { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 56px; font-weight: 700; color: var(--accent); line-height: 1; letter-spacing: -0.02em; }
+.headline-value .pct { font-size: 28px; color: var(--accent-dim); margin-left: 4px; }
+.headline-sub { font-size: 12px; color: var(--text-dim); margin-top: 10px; font-family: var(--mono); letter-spacing: 0.05em; }
+
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+.metric { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 10px; }
+.metric-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; font-weight: 700; }
+.metric-value { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 700; line-height: 1; }
+.metric-sub { font-size: 10px; color: var(--text-dim); font-family: var(--mono); margin-top: 4px; }
+
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.panel-title { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: baseline; }
+.panel-title .panel-meta { color: var(--text-faint); font-family: var(--mono); letter-spacing: 0.04em; text-transform: none; font-weight: 500; }
+.panel-empty { color: var(--text-faint); font-size: 12px; font-style: italic; padding: 4px 0; }
+
+.bar-row { display: grid; grid-template-columns: 110px 1fr 62px; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-row:last-child { margin-bottom: 0; }
+.bar-label { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.bar-fill.amber { background: var(--accent); }
+.bar-fill.green { background: var(--green); }
+.bar-fill.red { background: var(--red); }
+.bar-fill.blue { background: var(--blue); }
+.bar-fill.dim { background: var(--text-faint); }
+.bar-value { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-dim); text-align: right; }
+
+.target-bar { background: var(--surface-2); border-radius: 8px; height: 16px; overflow: hidden; position: relative; margin-top: 10px; }
+.target-fill { height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); transition: width 0.4s; }
+.target-marker { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); opacity: 0.6; }
+.target-marker::after { content: attr(data-label); position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 9px; color: var(--text-dim); white-space: nowrap; }
+.target-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-faint); margin-top: 8px; font-family: var(--mono); }
+
+.pushy-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.pushy-cell { background: var(--surface-2); border-radius: 8px; padding: 10px 4px; text-align: center; }
+.pushy-cell .pushy-num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 700; line-height: 1; }
+.pushy-cell .pushy-lbl { font-size: 9px; color: var(--text-faint); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 4px; }
+.pushy-cell .pushy-bar { height: 3px; background: var(--accent); border-radius: 2px; margin-top: 6px; opacity: 0.8; }
+
+.phrase-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.phrase-row:last-child { border-bottom: none; padding-bottom: 0; }
+.phrase-row:first-child { padding-top: 0; }
+.phrase-text { font-size: 13px; color: var(--text); margin-bottom: 4px; font-style: italic; }
+.phrase-meta { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+.phrase-meta .booked { color: var(--green); }
+.phrase-meta .pushy { color: var(--accent); }
+
+/* Entries */
+.entry-filter { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.entry-filter::-webkit-scrollbar { display: none; }
+.fbtn { padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-dim); font-size: 12px; white-space: nowrap; font-weight: 600; letter-spacing: 0.04em; }
+.fbtn.active { background: var(--accent); color: #1a1300; border-color: var(--accent); }
+
+.entry { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.entry-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.entry-time { font-family: var(--mono); font-size: 11px; color: var(--text-faint); letter-spacing: 0.04em; }
+.entry-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.entry-tag { font-size: 9px; padding: 3px 7px; border-radius: 4px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.entry-tag.booked { background: rgba(16,185,129,0.15); color: var(--green); }
+.entry-tag.declined { background: rgba(239,68,68,0.15); color: var(--red); }
+.entry-tag.thinking_about_it { background: rgba(59,130,246,0.15); color: var(--blue); }
+.entry-tag.other { background: rgba(245,158,11,0.15); color: var(--accent); }
+.entry-tag.notasked { background: rgba(136,136,136,0.15); color: var(--text-dim); }
+.entry-tag.nonqual { background: var(--surface-2); color: var(--text-faint); }
+.entry-tag.age { background: var(--surface-3); color: var(--text); }
+.entry-body { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.entry-body > div { margin-bottom: 2px; }
+.entry-body .lbl { color: var(--text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 4px; }
+.entry-body .val { color: var(--text); }
+.entry-quote { font-style: italic; color: var(--text); margin-top: 6px; padding-left: 10px; border-left: 2px solid var(--accent); font-size: 13px; }
+.entry-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.entry-actions button { flex: 1; font-size: 11px; padding: 8px; border-radius: 6px; color: var(--text-dim); border: 1px solid var(--border); background: var(--surface-2); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.entry-actions button.danger { color: var(--red); }
+.entry-actions button:active { background: var(--surface-3); }
+
+.empty { text-align: center; padding: 60px 20px; color: var(--text-faint); }
+.empty-icon { font-family: var(--mono); font-size: 32px; margin-bottom: 8px; opacity: 0.6; }
+.empty-text { font-size: 13px; }
+
+/* Export */
+.export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.export-btn { padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-align: center; }
+.export-btn:active { background: var(--surface-2); }
+.export-btn small { display: block; color: var(--text-faint); font-weight: 400; font-size: 10px; margin-top: 2px; letter-spacing: 0; text-transform: none; }
+.danger-zone { margin-top: 14px; padding: 12px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; text-align: center; }
+.danger-zone button { color: var(--red); font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* Tabbar */
+.tabbar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr); padding-bottom: env(safe-area-inset-bottom); z-index: 50; }
+.tab { padding: 12px 8px 10px; text-align: center; color: var(--text-faint); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+.tab.active { color: var(--accent); }
+.tab-icon { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0; }
+
+/* Toast */
+.toast { position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%) translateY(8px); background: var(--accent); color: #1a1300; padding: 12px 22px; border-radius: 999px; font-weight: 700; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: flex-end; }
+.modal-bg.show { display: flex; }
+.modal { background: var(--surface); border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; padding: 22px 20px; width: 100%; max-width: 480px; margin: 0 auto; }
+.modal h2 { font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+.modal p { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 8px; }
+.modal-actions button { flex: 1; padding: 14px; border-radius: 8px; font-weight: 700; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+.modal-actions .confirm { background: var(--red); color: #fff; }
+.modal-actions .dismiss { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+
+@media (min-width: 540px) {
+  body { max-width: 480px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); min-height: 100vh; }
+  .tabbar { max-width: 480px; left: 50%; transform: translateX(-50%); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">LEADS<span class="dot">.</span></div>
+  <div class="streak-badge" id="streakBadge"></div>
+  <div class="date" id="dateLabel"></div>
+</div>
+
+<div class="quickstats">
+  <div class="qs"><div class="qs-label">Visits</div><div class="qs-val" id="qs-v">0</div></div>
+  <div class="qs"><div class="qs-label">Qual</div><div class="qs-val" id="qs-q">0</div></div>
+  <div class="qs"><div class="qs-label">Asked</div><div class="qs-val" id="qs-a">0</div></div>
+  <div class="qs"><div class="qs-label">Booked Wk</div><div class="qs-val accent" id="qs-b">0<span class="sub">/5</span></div></div>
+</div>
+
+<!-- ───────── LOG ───────── -->
+<div class="view" id="view-log">
+  <div class="edit-banner" id="editBanner" style="display:none">
+    <span>Editing entry</span>
+    <button onclick="cancelEdit()">Cancel</button>
+  </div>
+
+  <div class="nudge" id="nudge" style="display:none">
+    <div class="nudge-head">
+      <div class="nudge-label">Before next customer</div>
+      <button class="nudge-dismiss" onclick="dismissNudge()" aria-label="dismiss">×</button>
+    </div>
+    <div class="nudge-phrase" id="nudge-phrase"></div>
+    <div class="nudge-meta" id="nudge-meta"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Boiler Age<span class="req">*</span><span class="hint" id="ageHint"></span></div>
+    <div class="chips cols-4" id="chips-age"></div>
+  </div>
+
+  <div class="section" id="section-asked">
+    <div class="section-label">Did you ask?<span class="req">*</span></div>
+    <div class="chips binary" id="chips-asked"></div>
+  </div>
+
+  <div class="section" id="section-notAsked" style="display:none">
+    <div class="section-label">Why not?<span class="req">*</span></div>
+    <div class="chips" id="chips-notAsked"></div>
+  </div>
+
+  <div class="section" id="section-outcome" style="display:none">
+    <div class="section-label">Outcome<span class="req">*</span></div>
+    <div class="chips" id="chips-outcome"></div>
+  </div>
+
+  <div class="section" id="section-framing" style="display:none">
+    <div class="section-label">Framing used<span class="req">*</span></div>
+    <div class="chips" id="chips-framing"></div>
+  </div>
+
+  <div class="section" id="section-pushy" style="display:none">
+    <div class="section-label">How pushy did you feel?<span class="req">*</span></div>
+    <div class="chips cols-5" id="chips-pushy"></div>
+  </div>
+
+  <div class="section">
+    <details class="disclosure" id="details-extras">
+      <summary>What you said · what worked · struggle · notes</summary>
+      <div class="field">
+        <label>Phrase used</label>
+        <textarea id="f-phrase" placeholder="What I actually said — e.g. 'Just so you know your options — would a free written quote on a new one be useful to have on file?'"></textarea>
+      </div>
+      <div class="field">
+        <label>What worked</label>
+        <textarea id="f-worked" placeholder="Optional"></textarea>
+      </div>
+      <div class="field">
+        <label>Struggle</label>
+        <textarea id="f-struggle" placeholder="What was hard"></textarea>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Anything else"></textarea>
+      </div>
+    </details>
+  </div>
+
+  <div class="save-row">
+    <button class="save-btn" id="saveBtn" disabled onclick="saveEntry()">Save</button>
+  </div>
+</div>
+
+<!-- ───────── STATS ───────── -->
+<div class="view hidden" id="view-stats">
+  <div class="stats-tabs" id="statsTabs">
+    <button class="stats-tab" data-range="today">Today</button>
+    <button class="stats-tab active" data-range="week">Week</button>
+    <button class="stats-tab" data-range="month">Month</button>
+    <button class="stats-tab" data-range="all">All</button>
+  </div>
+
+  <div class="headline">
+    <div class="headline-label">Booked / Qualifying</div>
+    <div class="headline-value"><span id="h-overall">0</span><span class="pct">%</span></div>
+    <div class="headline-sub" id="h-sub">0 booked / 0 qualifying</div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric">
+      <div class="metric-label">Qual Rate</div>
+      <div class="metric-value"><span id="m-qual">0</span>%</div>
+      <div class="metric-sub" id="m-qual-sub">0/0</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Ask Rate</div>
+      <div class="metric-value"><span id="m-ask">0</span>%</div>
+      <div class="metric-sub" id="m-ask-sub">0/0</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Conv</div>
+      <div class="metric-value"><span id="m-conv">0</span>%</div>
+      <div class="metric-sub" id="m-conv-sub">0/0</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">
+      <span>Weekly Pace</span>
+      <span class="panel-meta" id="t-meta">0 / 5</span>
+    </div>
+    <div class="target-bar">
+      <div class="target-fill" id="t-fill" style="width:0%"></div>
+      <div class="target-marker" id="t-marker-min" data-label="MIN" style="left:50%"></div>
+      <div class="target-marker" id="t-marker-stretch" data-label="TOP" style="left:100%"></div>
+    </div>
+    <div class="target-meta">
+      <span id="t-current">0 booked this week</span>
+      <span id="t-gap">need 5</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Pushy-Meter Distribution <span class="panel-meta">when asked</span></div>
+    <div class="pushy-grid" id="pushyGrid"></div>
+    <div class="panel-empty" id="pushyEmpty" style="display:none">No asks logged yet.</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Framing Performance <span class="panel-meta">booked rate</span></div>
+    <div id="framingBars"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Outcome Breakdown</div>
+    <div id="outcomeBars"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Why Not Asked</div>
+    <div id="notAskedBars"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Boiler Age Mix</div>
+    <div id="ageBars"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Best-Feeling Phrases <span class="panel-meta">low pushy + booked</span></div>
+    <div id="phrasePanel"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Common Struggles</div>
+    <div id="strugglesPanel"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Export & Data</div>
+    <div class="export-grid">
+      <button class="export-btn" onclick="exportJSON()">JSON<small>raw data</small></button>
+      <button class="export-btn" onclick="exportSummary()">Summary<small>copy / paste into Claude</small></button>
+    </div>
+    <div class="danger-zone">
+      <button onclick="confirmWipe()">Wipe all data</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── ENTRIES ───────── -->
+<div class="view hidden" id="view-entries">
+  <div class="entry-filter" id="entryFilter"></div>
+  <div id="entryList"></div>
+</div>
+
+<!-- ───────── Tabbar ───────── -->
+<div class="tabbar">
+  <button class="tab active" data-view="log"><span class="tab-icon">+</span>Log</button>
+  <button class="tab" data-view="stats"><span class="tab-icon">▴</span>Stats</button>
+  <button class="tab" data-view="entries"><span class="tab-icon">≡</span>Entries</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">Confirm</h2>
+    <p id="modalBody"></p>
+    <div class="modal-actions">
+      <button class="dismiss" onclick="closeModal()">Cancel</button>
+      <button class="confirm" id="modalConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ───────── Constants
+const STORE_KEY = 'boiler-leads-v2';
+const WEEKLY_MIN = 5;
+const WEEKLY_STRETCH = 10;
+
+const AGES = [
+  { id: 'lt10', label: '<10 yrs' },
+  { id: '10-14', label: '10-14' },
+  { id: '15-19', label: '15-19' },
+  { id: '20+', label: '20+' },
+];
+const NOT_ASKED_REASONS = [
+  { id: 'felt_pushy', label: 'Felt pushy' },
+  { id: 'forgot', label: 'Forgot' },
+  { id: 'wrong_moment', label: 'Wrong moment' },
+  { id: 'not_appropriate', label: 'Not appropriate' },
+  { id: 'customer_hostile', label: 'Hostile customer' },
+  { id: 'other', label: 'Other' },
+];
+const OUTCOMES = [
+  { id: 'booked', label: 'Booked', cls: 'success' },
+  { id: 'declined', label: 'Declined', cls: 'danger' },
+  { id: 'thinking_about_it', label: 'Thinking', cls: 'info' },
+  { id: 'other', label: 'Other', cls: 'muted' },
+];
+const FRAMINGS = [
+  { id: 'info_share', label: 'Info share', hint: '"Just so you know your options..."' },
+  { id: 'casual_mention', label: 'Casual', hint: '"Oh by the way..."' },
+  { id: 'direct_offer', label: 'Direct offer', hint: '"Want a free quote?"' },
+  { id: 'formal_pitch', label: 'Formal pitch', hint: 'Structured' },
+];
+const PUSHY_LABELS = ['Natural', 'OK', 'Mid', 'Hard', 'Forced'];
+
+const AGE_LABEL = Object.fromEntries(AGES.map(x => [x.id, x.label]));
+const OUTCOME_LABEL = Object.fromEntries(OUTCOMES.map(x => [x.id, x.label]));
+const REASON_LABEL = Object.fromEntries(NOT_ASKED_REASONS.map(x => [x.id, x.label]));
+const FRAMING_LABEL = Object.fromEntries(FRAMINGS.map(x => [x.id, x.label]));
+
+const QUALIFYING_AGES = new Set(['10-14', '15-19', '20+']);
+const isQualifyingAge = (age) => QUALIFYING_AGES.has(age);
+
+const DEFAULT_NUDGE = {
+  phrase: "Just so you know your options — would a free written quote on a new one be useful to have on file? No obligation, just info to sit on.",
+  meta: 'Default reframe · info-share, not pitch'
+};
+
+// ───────── State
+const state = {
+  view: 'log',
+  entries: load(),
+  draft: emptyDraft(),
+  editingId: null,
+  statsRange: 'week',
+  entryFilter: 'all',
+  showNudge: false,
+  nudgeContent: null,
+};
+
+function emptyDraft() {
+  return {
+    boilerAge: null,
+    asked: null,
+    notAskedReason: null,
+    outcome: null,
+    framing: null,
+    feltPushy: null,
+    phraseUsed: '',
+    whatWorked: '',
+    struggle: '',
+    notes: '',
+  };
+}
+
+// ───────── Storage
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
+  catch { return []; }
+}
+function persist() { localStorage.setItem(STORE_KEY, JSON.stringify(state.entries)); }
+
+// ───────── Date helpers
+function startOfDay(t) { const d = new Date(t); d.setHours(0,0,0,0); return d.getTime(); }
+function startOfWeek(t) {
+  const d = new Date(t); d.setHours(0,0,0,0);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  d.setDate(d.getDate() + diff);
+  return d.getTime();
+}
+function startOfMonth(t) {
+  const d = new Date(t); d.setHours(0,0,0,0); d.setDate(1); return d.getTime();
+}
+function fmtTime(t) {
+  return new Date(t).toLocaleString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function fmtDateOnly(t) {
+  return new Date(t).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+// ───────── Range / stats helpers
+function rangeStart(range) {
+  const now = Date.now();
+  if (range === 'today') return startOfDay(now);
+  if (range === 'week') return startOfWeek(now);
+  if (range === 'month') return startOfMonth(now);
+  return 0;
+}
+function entriesInRange(range) {
+  const start = rangeStart(range);
+  return state.entries.filter(e => e.ts >= start);
+}
+function summarise(entries) {
+  const visits = entries.length;
+  const qualifying = entries.filter(e => isQualifyingAge(e.boilerAge));
+  const q = qualifying.length;
+  const asked = qualifying.filter(e => e.asked).length;
+  const booked = qualifying.filter(e => e.outcome === 'booked').length;
+  const declined = qualifying.filter(e => e.outcome === 'declined').length;
+  const thinking = qualifying.filter(e => e.outcome === 'thinking_about_it').length;
+  const otherOut = qualifying.filter(e => e.asked && e.outcome === 'other').length;
+  return {
+    visits, q, asked, booked, declined, thinking, otherOut,
+    qualifying,
+    qualRate: visits ? q / visits : 0,
+    askRate: q ? asked / q : 0,
+    convRate: asked ? booked / asked : 0,
+    overallRate: q ? booked / q : 0,
+  };
+}
+const pct = (x) => Math.round(x * 100);
+const normText = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ').replace(/[.,!?;:"'()]/g, '');
+
+// Streak — consecutive days where (no qualifying customers OR at least 1 ask).
+// Days with no entries at all are neutral: don't add to or break the streak.
+function calcStreak() {
+  if (!state.entries.length) return 0;
+  const byDay = {};
+  for (const e of state.entries) {
+    const d = startOfDay(e.ts);
+    if (!byDay[d]) byDay[d] = { qual: 0, asked: 0 };
+    if (isQualifyingAge(e.boilerAge)) {
+      byDay[d].qual++;
+      if (e.asked) byDay[d].asked++;
+    }
+  }
+  const earliest = Math.min(...Object.keys(byDay).map(Number));
+  let streak = 0;
+  let cursor = startOfDay(Date.now());
+  while (cursor >= earliest) {
+    const d = byDay[cursor];
+    if (d === undefined) { cursor -= 86400000; continue; }
+    if (d.qual === 0 || d.asked > 0) { streak++; cursor -= 86400000; }
+    else break;
+  }
+  return streak;
+}
+
+// ───────── Chip rendering
+function chipHTML(id, label, selectedId, opts = {}) {
+  const sel = id === selectedId ? ` selected ${opts.cls || ''}` : '';
+  const cmp = opts.compact ? ' compact' : '';
+  const scl = opts.scale ? ' scale' : '';
+  const inner = opts.scale
+    ? `<span class="scale-num">${id}</span><span class="scale-lbl">${label}</span>`
+    : label;
+  return `<button class="chip${cmp}${scl}${sel}" data-id="${id}">${inner}</button>`;
+}
+
+function renderChipGroup(containerId, items, selectedId, onSelect, opts = {}) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map(it => chipHTML(it.id, it.label, selectedId, { cls: it.cls || opts.cls || '', compact: opts.compact, scale: opts.scale })).join('');
+  el.onclick = (e) => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    onSelect(b.dataset.id);
+    onAnyChipTap();
+  };
+}
+
+function onAnyChipTap() {
+  if (state.showNudge) {
+    state.showNudge = false;
+    document.getElementById('nudge').style.display = 'none';
+  }
+}
+
+// ───────── Log view rendering
+function renderLog() {
+  const d = state.draft;
+
+  // Boiler age
+  renderChipGroup('chips-age', AGES, d.boilerAge, (id) => {
+    if (d.boilerAge === id) { d.boilerAge = null; resetDependent(); }
+    else { d.boilerAge = id; if (!isQualifyingAge(id)) resetDependent(); }
+    renderLog();
+  });
+
+  const qualifying = isQualifyingAge(d.boilerAge);
+  const ageHint = document.getElementById('ageHint');
+  if (d.boilerAge) {
+    ageHint.textContent = qualifying ? 'qualifying — ask' : 'not qualifying';
+  } else ageHint.textContent = '';
+
+  // Asked y/n — only if qualifying
+  document.getElementById('section-asked').style.display = qualifying ? '' : 'none';
+  if (qualifying) {
+    const askedOpts = [
+      { id: 'yes', label: 'Yes — Asked', cls: 'success' },
+      { id: 'no', label: 'No — Skipped', cls: 'danger' },
+    ];
+    const askedSel = d.asked === null ? null : (d.asked ? 'yes' : 'no');
+    renderChipGroup('chips-asked', askedOpts, askedSel, (id) => {
+      const v = id === 'yes';
+      if (d.asked === v) {
+        d.asked = null; d.notAskedReason = null; d.outcome = null; d.framing = null; d.feltPushy = null;
+      } else {
+        d.asked = v;
+        if (v) d.notAskedReason = null;
+        else { d.outcome = null; d.framing = null; d.feltPushy = null; }
+      }
+      renderLog();
+    });
+  }
+
+  // Why not — if asked = false
+  const showWhyNot = qualifying && d.asked === false;
+  document.getElementById('section-notAsked').style.display = showWhyNot ? '' : 'none';
+  if (showWhyNot) {
+    renderChipGroup('chips-notAsked', NOT_ASKED_REASONS, d.notAskedReason, (id) => {
+      d.notAskedReason = d.notAskedReason === id ? null : id;
+      renderLog();
+    }, { compact: true });
+  }
+
+  // Outcome / framing / pushy — if asked = true
+  const showAskedFields = qualifying && d.asked === true;
+  document.getElementById('section-outcome').style.display = showAskedFields ? '' : 'none';
+  document.getElementById('section-framing').style.display = showAskedFields ? '' : 'none';
+  document.getElementById('section-pushy').style.display = showAskedFields ? '' : 'none';
+
+  if (showAskedFields) {
+    renderChipGroup('chips-outcome', OUTCOMES, d.outcome, (id) => {
+      d.outcome = d.outcome === id ? null : id;
+      renderLog();
+    });
+    renderChipGroup('chips-framing', FRAMINGS, d.framing, (id) => {
+      d.framing = d.framing === id ? null : id;
+      renderLog();
+    }, { compact: true });
+    // Pushy 1-5
+    const pushyItems = PUSHY_LABELS.map((lbl, i) => ({ id: String(i + 1), label: lbl }));
+    renderChipGroup('chips-pushy', pushyItems, d.feltPushy ? String(d.feltPushy) : null, (id) => {
+      const n = parseInt(id, 10);
+      d.feltPushy = d.feltPushy === n ? null : n;
+      renderLog();
+    }, { scale: true });
+  }
+
+  // Save button
+  document.getElementById('saveBtn').disabled = !isDraftValid();
+  document.getElementById('saveBtn').textContent = state.editingId ? 'Update' : 'Save';
+  document.getElementById('editBanner').style.display = state.editingId ? 'flex' : 'none';
+}
+
+function resetDependent() {
+  const d = state.draft;
+  d.asked = null;
+  d.notAskedReason = null;
+  d.outcome = null;
+  d.framing = null;
+  d.feltPushy = null;
+}
+
+function isDraftValid() {
+  const d = state.draft;
+  if (!d.boilerAge) return false;
+  if (!isQualifyingAge(d.boilerAge)) return true; // non-qualifying = just log the visit
+  if (d.asked === null) return false;
+  if (d.asked === false) return !!d.notAskedReason;
+  // asked === true
+  return !!(d.outcome && d.framing && d.feltPushy);
+}
+
+// Wire text fields
+['phrase','worked','struggle','notes'].forEach(name => {
+  const el = document.getElementById('f-' + name);
+  const map = { phrase: 'phraseUsed', worked: 'whatWorked', struggle: 'struggle', notes: 'notes' };
+  el.addEventListener('input', () => { state.draft[map[name]] = el.value; });
+});
+
+function syncTextFieldsFromDraft() {
+  document.getElementById('f-phrase').value = state.draft.phraseUsed || '';
+  document.getElementById('f-worked').value = state.draft.whatWorked || '';
+  document.getElementById('f-struggle').value = state.draft.struggle || '';
+  document.getElementById('f-notes').value = state.draft.notes || '';
+  const hasAny = state.draft.phraseUsed || state.draft.whatWorked || state.draft.struggle || state.draft.notes;
+  document.getElementById('details-extras').open = !!hasAny;
+}
+
+function saveEntry() {
+  if (!isDraftValid()) return;
+  const d = state.draft;
+  if (state.editingId) {
+    const idx = state.entries.findIndex(e => e.id === state.editingId);
+    if (idx >= 0) state.entries[idx] = { ...state.entries[idx], ...d };
+    state.editingId = null;
+    toast('Updated');
+  } else {
+    const now = Date.now();
+    state.entries.push({ id: now, ts: now, ...d });
+    toast('Logged');
+  }
+  state.draft = emptyDraft();
+  persist();
+  syncTextFieldsFromDraft();
+  document.getElementById('details-extras').open = false;
+  showNudge();
+  renderLog();
+  renderQuickstats();
+  renderStreak();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+  state.editingId = null;
+  state.draft = emptyDraft();
+  syncTextFieldsFromDraft();
+  document.getElementById('details-extras').open = false;
+  renderLog();
+}
+
+function editEntry(id) {
+  const e = state.entries.find(x => x.id === id);
+  if (!e) return;
+  state.editingId = id;
+  state.draft = {
+    boilerAge: e.boilerAge,
+    asked: e.asked,
+    notAskedReason: e.notAskedReason || null,
+    outcome: e.outcome || null,
+    framing: e.framing || null,
+    feltPushy: e.feltPushy || null,
+    phraseUsed: e.phraseUsed || '',
+    whatWorked: e.whatWorked || '',
+    struggle: e.struggle || '',
+    notes: e.notes || '',
+  };
+  syncTextFieldsFromDraft();
+  switchView('log');
+  renderLog();
+  window.scrollTo(0, 0);
+}
+
+function deleteEntry(id) {
+  openModal('Delete entry?', 'This cannot be undone.', () => {
+    state.entries = state.entries.filter(e => e.id !== id);
+    persist();
+    renderEntries();
+    renderQuickstats();
+    renderStreak();
+    closeModal();
+    toast('Deleted');
+  });
+}
+
+// ───────── Rehearsal nudge
+function pickNudgeContent() {
+  // Best-feeling phrase that booked, this week or recent
+  const wk = entriesInRange('week').filter(e => e.asked && e.phraseUsed && e.phraseUsed.trim() && e.feltPushy != null);
+  let best = null;
+  // pref: booked & pushy <= 2, lowest pushy
+  const bookedLowPushy = wk.filter(e => e.outcome === 'booked' && e.feltPushy <= 2)
+    .sort((a, b) => a.feltPushy - b.feltPushy || b.ts - a.ts);
+  if (bookedLowPushy.length) best = bookedLowPushy[0];
+  // fallback: any booked
+  if (!best) {
+    const anyBooked = wk.filter(e => e.outcome === 'booked').sort((a, b) => a.feltPushy - b.feltPushy);
+    if (anyBooked.length) best = anyBooked[0];
+  }
+  // fallback: lowest pushy of week
+  if (!best && wk.length) {
+    best = [...wk].sort((a, b) => a.feltPushy - b.feltPushy)[0];
+  }
+  // fallback: any entry with phrase, all time
+  if (!best) {
+    const any = state.entries.filter(e => e.asked && e.phraseUsed && e.phraseUsed.trim() && e.feltPushy != null)
+      .sort((a, b) => a.feltPushy - b.feltPushy);
+    if (any.length) best = any[0];
+  }
+  if (!best) return DEFAULT_NUDGE;
+  const metaBits = [];
+  metaBits.push(`pushy ${best.feltPushy}/5`);
+  if (best.outcome === 'booked') metaBits.push('<span class="good">booked</span>');
+  if (best.framing) metaBits.push(FRAMING_LABEL[best.framing] || best.framing);
+  return {
+    phrase: best.phraseUsed.trim(),
+    meta: 'Your best-feeling phrase · ' + metaBits.join(' · ')
+  };
+}
+
+function showNudge() {
+  const c = pickNudgeContent();
+  state.showNudge = true;
+  state.nudgeContent = c;
+  const el = document.getElementById('nudge');
+  document.getElementById('nudge-phrase').textContent = '"' + c.phrase + '"';
+  document.getElementById('nudge-meta').innerHTML = c.meta;
+  el.style.display = '';
+}
+
+function dismissNudge() {
+  state.showNudge = false;
+  document.getElementById('nudge').style.display = 'none';
+}
+
+// ───────── Header / quickstats
+function renderQuickstats() {
+  const today = summarise(entriesInRange('today'));
+  const weekBooked = entriesInRange('week').filter(e => e.outcome === 'booked').length;
+  document.getElementById('qs-v').textContent = today.visits;
+  document.getElementById('qs-q').textContent = today.q;
+  document.getElementById('qs-a').textContent = today.asked;
+  document.getElementById('qs-b').innerHTML = `${weekBooked}<span class="sub">/${WEEKLY_MIN}</span>`;
+}
+function renderStreak() {
+  const s = calcStreak();
+  const el = document.getElementById('streakBadge');
+  el.textContent = s > 0 ? `▲ ${s}d streak` : '';
+}
+function renderDate() {
+  document.getElementById('dateLabel').textContent = fmtDateOnly(Date.now()).toUpperCase();
+}
+
+// ───────── Stats view
+function renderStats() {
+  const entries = entriesInRange(state.statsRange);
+  const s = summarise(entries);
+
+  document.getElementById('h-overall').textContent = pct(s.overallRate);
+  document.getElementById('h-sub').textContent = `${s.booked} booked / ${s.q} qualifying`;
+  document.getElementById('m-qual').textContent = pct(s.qualRate);
+  document.getElementById('m-qual-sub').textContent = `${s.q}/${s.visits}`;
+  document.getElementById('m-ask').textContent = pct(s.askRate);
+  document.getElementById('m-ask-sub').textContent = `${s.asked}/${s.q}`;
+  document.getElementById('m-conv').textContent = pct(s.convRate);
+  document.getElementById('m-conv-sub').textContent = `${s.booked}/${s.asked}`;
+
+  // Weekly pace (always week regardless of stats range)
+  const weekEntries = entriesInRange('week');
+  const weekBooked = weekEntries.filter(e => e.outcome === 'booked').length;
+  document.getElementById('t-fill').style.width = Math.min(100, (weekBooked / WEEKLY_STRETCH) * 100) + '%';
+  document.getElementById('t-marker-min').style.left = ((WEEKLY_MIN / WEEKLY_STRETCH) * 100) + '%';
+  document.getElementById('t-meta').textContent = `${weekBooked} / ${WEEKLY_MIN}`;
+  document.getElementById('t-current').textContent = `${weekBooked} booked this week`;
+  const gap = weekBooked >= WEEKLY_STRETCH
+    ? `top tier`
+    : (weekBooked >= WEEKLY_MIN ? `${WEEKLY_STRETCH - weekBooked} to top` : `${WEEKLY_MIN - weekBooked} to min`);
+  document.getElementById('t-gap').textContent = gap;
+
+  renderPushyGrid(s.qualifying);
+  renderFramingBars(s.qualifying);
+  renderOutcomeBars(s);
+  renderNotAskedBars(s.qualifying);
+  renderAgeBars(entries);
+  renderPhrases(s.qualifying);
+  renderStruggles(entries);
+}
+
+function renderBars(containerId, rows, emptyMsg) {
+  const el = document.getElementById(containerId);
+  if (!rows.length) { el.innerHTML = `<div class="panel-empty">${emptyMsg}</div>`; return; }
+  const maxN = Math.max(...rows.map(r => r.n), 1);
+  el.innerHTML = rows.map(r => {
+    const w = (r.n / maxN) * 100;
+    const sub = r.suffix != null ? r.suffix : (r.total ? ` · ${Math.round((r.n / r.total) * 100)}%` : '');
+    return `<div class="bar-row">
+      <div class="bar-label">${r.label}</div>
+      <div class="bar-track"><div class="bar-fill ${r.cls}" style="width:${w}%"></div></div>
+      <div class="bar-value">${r.n}${sub}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderOutcomeBars(s) {
+  const rows = [
+    { label: 'Booked', n: s.booked, cls: 'green', total: s.asked },
+    { label: 'Declined', n: s.declined, cls: 'red', total: s.asked },
+    { label: 'Thinking', n: s.thinking, cls: 'blue', total: s.asked },
+    { label: 'Other', n: s.otherOut, cls: 'amber', total: s.asked },
+    { label: 'Not asked', n: s.q - s.asked, cls: 'dim', total: s.q },
+  ].filter(r => r.n > 0);
+  renderBars('outcomeBars', rows, 'Nothing logged yet.');
+}
+
+function renderNotAskedBars(qualifying) {
+  const notAsked = qualifying.filter(e => e.asked === false);
+  const counts = {};
+  NOT_ASKED_REASONS.forEach(r => counts[r.id] = 0);
+  notAsked.forEach(e => { if (e.notAskedReason) counts[e.notAskedReason] = (counts[e.notAskedReason] || 0) + 1; });
+  const rows = NOT_ASKED_REASONS
+    .map(r => ({ label: r.label, n: counts[r.id], cls: r.id === 'felt_pushy' ? 'amber' : 'dim', total: notAsked.length }))
+    .filter(r => r.n > 0)
+    .sort((a, b) => b.n - a.n);
+  renderBars('notAskedBars', rows, 'No skips logged.');
+}
+
+function renderAgeBars(entries) {
+  const counts = {};
+  AGES.forEach(a => counts[a.id] = 0);
+  entries.forEach(e => { counts[e.boilerAge] = (counts[e.boilerAge] || 0) + 1; });
+  const rows = AGES
+    .map(a => ({ label: a.label, n: counts[a.id], cls: isQualifyingAge(a.id) ? 'amber' : 'dim', total: entries.length }))
+    .filter(r => r.n > 0);
+  renderBars('ageBars', rows, 'No visits logged.');
+}
+
+function renderFramingBars(qualifying) {
+  const asked = qualifying.filter(e => e.asked && e.framing);
+  if (!asked.length) {
+    document.getElementById('framingBars').innerHTML = '<div class="panel-empty">No asks logged.</div>';
+    return;
+  }
+  const rows = FRAMINGS.map(f => {
+    const used = asked.filter(e => e.framing === f.id);
+    const booked = used.filter(e => e.outcome === 'booked').length;
+    const rate = used.length ? booked / used.length : 0;
+    return { label: f.label, n: booked, total: used.length, cls: 'green', rate, used: used.length };
+  }).filter(r => r.used > 0).sort((a, b) => b.rate - a.rate);
+  const el = document.getElementById('framingBars');
+  el.innerHTML = rows.map(r => {
+    const w = r.rate * 100;
+    return `<div class="bar-row">
+      <div class="bar-label">${r.label}</div>
+      <div class="bar-track"><div class="bar-fill green" style="width:${w}%"></div></div>
+      <div class="bar-value">${r.n}/${r.used} · ${Math.round(w)}%</div>
+    </div>`;
+  }).join('') || '<div class="panel-empty">No asks with framing.</div>';
+}
+
+function renderPushyGrid(qualifying) {
+  const asked = qualifying.filter(e => e.asked && e.feltPushy);
+  const grid = document.getElementById('pushyGrid');
+  const empty = document.getElementById('pushyEmpty');
+  if (!asked.length) {
+    grid.style.display = 'none';
+    empty.style.display = '';
+    return;
+  }
+  grid.style.display = '';
+  empty.style.display = 'none';
+  const counts = [0, 0, 0, 0, 0];
+  asked.forEach(e => { counts[e.feltPushy - 1]++; });
+  const max = Math.max(...counts, 1);
+  grid.innerHTML = counts.map((n, i) => {
+    const w = (n / max) * 100;
+    return `<div class="pushy-cell">
+      <div class="pushy-num">${n}</div>
+      <div class="pushy-lbl">${i + 1} · ${PUSHY_LABELS[i]}</div>
+      <div class="pushy-bar" style="width:${w}%"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderPhrases(qualifying) {
+  const el = document.getElementById('phrasePanel');
+  const asked = qualifying.filter(e => e.asked && e.phraseUsed && e.phraseUsed.trim());
+  if (!asked.length) {
+    el.innerHTML = '<div class="panel-empty">Log a phrase to see what works.</div>';
+    return;
+  }
+  const groups = {};
+  asked.forEach(e => {
+    const key = normText(e.phraseUsed);
+    if (!groups[key]) groups[key] = { raw: e.phraseUsed.trim(), uses: 0, booked: 0, pushySum: 0, pushyN: 0, framings: new Set() };
+    const g = groups[key];
+    g.uses++;
+    if (e.outcome === 'booked') g.booked++;
+    if (e.feltPushy != null) { g.pushySum += e.feltPushy; g.pushyN++; }
+    if (e.framing) g.framings.add(FRAMING_LABEL[e.framing] || e.framing);
+  });
+  const rows = Object.values(groups).map(g => ({
+    ...g,
+    bookedRate: g.uses ? g.booked / g.uses : 0,
+    avgPushy: g.pushyN ? g.pushySum / g.pushyN : null,
+  })).sort((a, b) => {
+    // sort by booked rate desc, then low pushy, then uses
+    if (b.bookedRate !== a.bookedRate) return b.bookedRate - a.bookedRate;
+    const ap = a.avgPushy ?? 5, bp = b.avgPushy ?? 5;
+    if (ap !== bp) return ap - bp;
+    return b.uses - a.uses;
+  }).slice(0, 6);
+  el.innerHTML = rows.map(r => {
+    const rate = Math.round(r.bookedRate * 100);
+    const avgP = r.avgPushy != null ? r.avgPushy.toFixed(1) : '—';
+    const framings = [...r.framings].slice(0, 2).join(', ');
+    return `<div class="phrase-row">
+      <div class="phrase-text">"${escapeHTML(r.raw)}"</div>
+      <div class="phrase-meta">
+        <span>${r.uses}× used</span>
+        <span class="booked">${r.booked} booked · ${rate}%</span>
+        <span class="pushy">pushy ${avgP}</span>
+        ${framings ? `<span>${escapeHTML(framings)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderStruggles(entries) {
+  const el = document.getElementById('strugglesPanel');
+  const ws = entries.filter(e => e.struggle && e.struggle.trim());
+  if (!ws.length) { el.innerHTML = '<div class="panel-empty">Nothing logged.</div>'; return; }
+  const groups = {};
+  ws.forEach(e => {
+    const key = normText(e.struggle);
+    if (!groups[key]) groups[key] = { raw: e.struggle.trim(), n: 0 };
+    groups[key].n++;
+  });
+  const rows = Object.values(groups).sort((a, b) => b.n - a.n).slice(0, 6);
+  el.innerHTML = rows.map(r => `<div class="phrase-row">
+    <div class="phrase-text">"${escapeHTML(r.raw)}"</div>
+    <div class="phrase-meta"><span>${r.n}× mentioned</span></div>
+  </div>`).join('');
+}
+
+// ───────── Entries
+const FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'qualifying', label: 'Qualifying' },
+  { id: 'booked', label: 'Booked' },
+  { id: 'declined', label: 'Declined' },
+  { id: 'thinking', label: 'Thinking' },
+  { id: 'notasked', label: 'Not asked' },
+  { id: 'nonqual', label: 'Non-qual' },
+];
+
+function renderEntries() {
+  const fbar = document.getElementById('entryFilter');
+  fbar.innerHTML = FILTERS.map(f => `<button class="fbtn ${state.entryFilter === f.id ? 'active' : ''}" data-id="${f.id}">${f.label}</button>`).join('');
+  fbar.onclick = (e) => {
+    const b = e.target.closest('.fbtn'); if (!b) return;
+    state.entryFilter = b.dataset.id; renderEntries();
+  };
+
+  const sorted = [...state.entries].sort((a, b) => b.ts - a.ts);
+  const filtered = sorted.filter(e => {
+    const qual = isQualifyingAge(e.boilerAge);
+    switch (state.entryFilter) {
+      case 'all': return true;
+      case 'qualifying': return qual;
+      case 'nonqual': return !qual;
+      case 'notasked': return qual && !e.asked;
+      case 'thinking': return e.outcome === 'thinking_about_it';
+      default: return e.outcome === state.entryFilter;
+    }
+  });
+
+  const list = document.getElementById('entryList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">∅</div><div class="empty-text">No entries${state.entryFilter !== 'all' ? ' for this filter' : ' yet'}.</div></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(renderEntryCard).join('');
+  list.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => editEntry(+b.dataset.edit)));
+  list.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => deleteEntry(+b.dataset.del)));
+}
+
+function renderEntryCard(e) {
+  const qual = isQualifyingAge(e.boilerAge);
+  const tags = [];
+  tags.push(`<span class="entry-tag age">${AGE_LABEL[e.boilerAge] || e.boilerAge}</span>`);
+  if (!qual) {
+    tags.push(`<span class="entry-tag nonqual">Non-qual</span>`);
+  } else if (e.asked) {
+    const out = e.outcome || 'other';
+    tags.push(`<span class="entry-tag ${out}">${OUTCOME_LABEL[e.outcome] || 'Other'}</span>`);
+  } else {
+    tags.push(`<span class="entry-tag notasked">Not asked</span>`);
+  }
+
+  const lines = [];
+  if (qual && e.asked === false && e.notAskedReason) lines.push(`<div><span class="lbl">Reason</span><span class="val">${REASON_LABEL[e.notAskedReason]}</span></div>`);
+  if (qual && e.asked && e.framing) lines.push(`<div><span class="lbl">Framing</span><span class="val">${FRAMING_LABEL[e.framing]}</span><span class="lbl" style="margin-left:10px">Pushy</span><span class="val">${e.feltPushy}/5</span></div>`);
+  if (e.phraseUsed) lines.push(`<div class="entry-quote">"${escapeHTML(e.phraseUsed)}"</div>`);
+  if (e.whatWorked) lines.push(`<div><span class="lbl">Worked</span><span class="val">${escapeHTML(e.whatWorked)}</span></div>`);
+  if (e.struggle) lines.push(`<div><span class="lbl">Struggle</span><span class="val">${escapeHTML(e.struggle)}</span></div>`);
+  if (e.notes) lines.push(`<div><span class="lbl">Notes</span><span class="val">${escapeHTML(e.notes)}</span></div>`);
+
+  return `<div class="entry">
+    <div class="entry-head">
+      <div class="entry-time">${fmtTime(e.ts)}</div>
+      <div class="entry-tags">${tags.join('')}</div>
+    </div>
+    <div class="entry-body">${lines.join('')}</div>
+    <div class="entry-actions">
+      <button data-edit="${e.id}">Edit</button>
+      <button class="danger" data-del="${e.id}">Delete</button>
+    </div>
+  </div>`;
+}
+
+function escapeHTML(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ───────── View switching
+function switchView(v) {
+  state.view = v;
+  ['log', 'stats', 'entries'].forEach(name => document.getElementById('view-' + name).classList.toggle('hidden', name !== v));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === v));
+  if (v === 'stats') renderStats();
+  if (v === 'entries') renderEntries();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+document.querySelectorAll('.stats-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    state.statsRange = t.dataset.range;
+    document.querySelectorAll('.stats-tab').forEach(x => x.classList.toggle('active', x === t));
+    renderStats();
+  });
+});
+
+// ───────── Export
+function downloadFile(name, content, type = 'application/json') {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function copyOrDownload(name, content) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(content).then(() => toast('Copied'), () => downloadFile(name, content));
+  } else {
+    downloadFile(name, content);
+  }
+}
+
+function exportJSON() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    schema: 'boiler-leads-v2',
+    entries: [...state.entries].sort((a, b) => a.ts - b.ts),
+  };
+  copyOrDownload('leads.json', JSON.stringify(payload, null, 2));
+}
+
+function exportSummary() {
+  const all = summarise(state.entries);
+  const week = summarise(entriesInRange('week'));
+  const month = summarise(entriesInRange('month'));
+  const lines = [];
+  lines.push(`BOILER LEADS — EXPORT ${new Date().toISOString().slice(0, 10)}`);
+  lines.push(`Total visits: ${state.entries.length} · Streak: ${calcStreak()} days`);
+  lines.push('');
+  for (const [label, s] of [['THIS WEEK', week], ['THIS MONTH', month], ['ALL TIME', all]]) {
+    lines.push(`— ${label} —`);
+    lines.push(`Visits: ${s.visits}  Qual: ${s.q} (${pct(s.qualRate)}%)  Asked: ${s.asked} (${pct(s.askRate)}%)  Booked: ${s.booked}  Conv: ${pct(s.convRate)}%  Overall: ${pct(s.overallRate)}%`);
+    lines.push('');
+  }
+  lines.push(`Target: ${WEEKLY_MIN}/week min · ${WEEKLY_STRETCH}/week top-tier.`);
+  lines.push('');
+
+  // Outcomes
+  lines.push('Outcome (all time, qualifying):');
+  lines.push(`  booked     ${all.booked}`);
+  lines.push(`  declined   ${all.declined}`);
+  lines.push(`  thinking   ${all.thinking}`);
+  lines.push(`  other      ${all.otherOut}`);
+  lines.push(`  not asked  ${all.q - all.asked}`);
+  lines.push('');
+
+  // Not asked reasons
+  const notAsked = all.qualifying.filter(e => e.asked === false);
+  if (notAsked.length) {
+    const c = {};
+    notAsked.forEach(e => { if (e.notAskedReason) c[e.notAskedReason] = (c[e.notAskedReason] || 0) + 1; });
+    lines.push('Why not asked (all time):');
+    Object.entries(c).sort((a, b) => b[1] - a[1]).forEach(([k, n]) => lines.push(`  ${REASON_LABEL[k] || k}: ${n}`));
+    lines.push('');
+  }
+
+  // Age mix
+  const ageC = {};
+  state.entries.forEach(e => { ageC[e.boilerAge] = (ageC[e.boilerAge] || 0) + 1; });
+  lines.push('Boiler age mix (all time):');
+  AGES.forEach(a => { if (ageC[a.id]) lines.push(`  ${a.label}: ${ageC[a.id]}`); });
+  lines.push('');
+
+  // Pushy distribution
+  const askedAll = all.qualifying.filter(e => e.asked && e.feltPushy);
+  if (askedAll.length) {
+    const buckets = [0, 0, 0, 0, 0];
+    let bookedByPushy = [0, 0, 0, 0, 0];
+    askedAll.forEach(e => {
+      buckets[e.feltPushy - 1]++;
+      if (e.outcome === 'booked') bookedByPushy[e.feltPushy - 1]++;
+    });
+    lines.push('Pushy-meter distribution (all time, asked entries):');
+    buckets.forEach((n, i) => {
+      const rate = n ? Math.round((bookedByPushy[i] / n) * 100) : 0;
+      lines.push(`  ${i + 1} (${PUSHY_LABELS[i]}): ${n} times · ${bookedByPushy[i]} booked (${rate}%)`);
+    });
+    const avg = askedAll.reduce((s, e) => s + e.feltPushy, 0) / askedAll.length;
+    lines.push(`  Avg pushy: ${avg.toFixed(2)}`);
+    lines.push('');
+  }
+
+  // Framing performance
+  const asked = all.qualifying.filter(e => e.asked && e.framing);
+  if (asked.length) {
+    lines.push('Framing performance (all time):');
+    FRAMINGS.forEach(f => {
+      const used = asked.filter(e => e.framing === f.id);
+      if (!used.length) return;
+      const booked = used.filter(e => e.outcome === 'booked').length;
+      const rate = Math.round((booked / used.length) * 100);
+      const avgP = used.filter(e => e.feltPushy).reduce((s, e) => s + e.feltPushy, 0) / Math.max(1, used.filter(e => e.feltPushy).length);
+      lines.push(`  ${f.label}: ${used.length} used · ${booked} booked (${rate}%) · avg pushy ${avgP.toFixed(2)}`);
+    });
+    lines.push('');
+  }
+
+  // Phrases
+  const withPhrase = all.qualifying.filter(e => e.asked && e.phraseUsed && e.phraseUsed.trim());
+  if (withPhrase.length) {
+    const groups = {};
+    withPhrase.forEach(e => {
+      const key = normText(e.phraseUsed);
+      if (!groups[key]) groups[key] = { raw: e.phraseUsed.trim(), uses: 0, booked: 0, pushySum: 0, pushyN: 0 };
+      const g = groups[key];
+      g.uses++;
+      if (e.outcome === 'booked') g.booked++;
+      if (e.feltPushy != null) { g.pushySum += e.feltPushy; g.pushyN++; }
+    });
+    const rows = Object.values(groups).sort((a, b) => (b.booked / b.uses) - (a.booked / a.uses) || b.uses - a.uses).slice(0, 12);
+    lines.push('Phrases used (top 12, by booked-rate):');
+    rows.forEach(r => {
+      const rate = Math.round((r.booked / r.uses) * 100);
+      const avgP = r.pushyN ? (r.pushySum / r.pushyN).toFixed(1) : '—';
+      lines.push(`  [${r.uses}× · ${r.booked} booked (${rate}%) · pushy ${avgP}] "${r.raw}"`);
+    });
+    lines.push('');
+  }
+
+  // Struggles
+  const struggles = state.entries.filter(e => e.struggle && e.struggle.trim());
+  if (struggles.length) {
+    const groups = {};
+    struggles.forEach(e => {
+      const key = normText(e.struggle);
+      if (!groups[key]) groups[key] = { raw: e.struggle.trim(), n: 0 };
+      groups[key].n++;
+    });
+    const rows = Object.values(groups).sort((a, b) => b.n - a.n).slice(0, 10);
+    lines.push('Common struggles:');
+    rows.forEach(r => lines.push(`  [${r.n}×] "${r.raw}"`));
+    lines.push('');
+  }
+
+  lines.push('— COACHING PROMPT —');
+  lines.push('I am a UK boiler engineer logging every customer visit. I see ~30/week. My company target is 5 leads/week (free no-obligation quote bookings), top performers do 8-10/week. My personal blocker is FEELING pushy when I ask, so I track framing used + a pushy-meter 1-5 on every ask.');
+  lines.push('');
+  lines.push('Grill me on: where is my biggest leak (qualification vs ask rate vs conversion)? Which framings book best AND feel least pushy? What patterns do you see in my best-feeling phrases? Where am I lying to myself in the "why not asked" reasons? Specific homework I should run this week.');
+  lines.push('');
+  lines.push('— RAW JSON —');
+  lines.push(JSON.stringify({ entries: state.entries }, null, 2));
+
+  copyOrDownload('leads-summary.txt', lines.join('\n'));
+}
+
+function confirmWipe() {
+  openModal('Wipe all data?', 'Every entry, gone. No undo.', () => {
+    state.entries = [];
+    persist();
+    closeModal();
+    toast('Wiped');
+    renderQuickstats();
+    renderStreak();
+    renderStats();
+    renderEntries();
+  });
+}
+
+// ───────── Toast & modal
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+function openModal(title, body, onConfirm) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  const c = document.getElementById('modalConfirm');
+  const fresh = c.cloneNode(true);
+  c.parentNode.replaceChild(fresh, c);
+  fresh.addEventListener('click', onConfirm);
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+
+// ───────── Init
+renderDate();
+renderQuickstats();
+renderStreak();
+renderLog();
+syncTextFieldsFromDraft();
+setInterval(() => { renderDate(); renderQuickstats(); renderStreak(); if (state.view === 'stats') renderStats(); }, 60000);
+</script>
+</body>
+</html>
